@@ -1,0 +1,105 @@
+# deploy-kit Project Intent for overleaf: the Community Edition monolith, hardened by this
+# repository's image to run as www-data under a read-only root filesystem, and the Redis it
+# keeps pending document updates in.
+#
+# Projects and accounts are in the platform's Mongo, every file and history chunk in Garage,
+# so the overleaf Process holds no state and may run anywhere its image does.
+
+apiVersion: intent.jorisjonkers.dev/v1
+kind: Project
+schemaVersion: 1.0.0
+
+project: overleaf # the namespace derives: overleaf-system
+owner: joris
+
+applications:
+  - id: overleaf
+    exposure:
+      - name: public
+        host: overleaf.jorisjonkers.dev
+        # Overleaf keeps its own accounts and invites only existing ones; forward-auth would
+        # be a second login and break its websocket.
+        audience: anonymous
+        routes:
+          - { path: /, match: prefix, process: overleaf, surface: http }
+
+    processes:
+      - name: overleaf
+        lifecycle: application
+        image: overleaf # this repository's image; the lock resolves digest, uid and gid
+        runtime: none
+
+        provides:
+          http: 8000
+
+        dependsOn:
+          - { application: overleaf-redis, surface: redis }
+          - { application: stalwart, surface: submission }
+
+        secrets:
+          # The session and invite-token secrets every issued cookie and token was signed with,
+          # and the password of the latex@ submission account, where the old path keeps them.
+          - path: secret/data/platform/overleaf
+            keys: [session_secret, invite_token_secret, smtp.password]
+            access: read
+            delivery: env
+            rotation: { tolerates: restart }
+          # Overleaf's own Garage key, scoped to its buckets: a compile runs as the same user
+          # and can read it. Garage's key id is GK and 24 hex digits, the first 24 of key_hex.
+          - path: secret/data/overleaf-system/garage
+            keys:
+              - name: s3.key_hex
+                generate: { bytes: 16, encoding: hex }
+              - name: s3.secret
+                generate: { bytes: 32, encoding: hex }
+            access: read
+            delivery: env
+            rotation: { tolerates: restart }
+
+        # The live pod uses about 1.3Gi; a large compile needs headroom above that.
+        placement:
+          memory: 3Gi
+          cpu: 500m
+          arch: [amd64] # sharelatex/sharelatex is published for amd64 only
+
+        # Compiles, their output and caches, runit's and nginx's runtime state, and TeX's.
+        writablePaths: [/var/lib/overleaf, /run, /tmp]
+
+        probes:
+          readiness: { path: /status, port: 8000 }
+          liveness: { path: /status, port: 8000 }
+
+        startupBudget: 600s # migrations and the doc version check run before anything serves
+
+        # One instance holds the live editing sessions; a second beside it would split them.
+        cutover: interrupted
+
+  - id: overleaf-redis
+    processes:
+      - name: redis
+        lifecycle: application
+        image: overleaf-redis # redis:7.4-alpine with its settings; Overleaf 6 needs 7.4
+        runtime: none
+
+        provides:
+          redis: 6379
+
+        placement:
+          memory: 512Mi
+          cpu: 100m
+
+        probes:
+          readiness: { tcp: 6379 }
+          liveness: { tcp: 6379 }
+
+        startupBudget: 60s
+
+        cutover: interrupted
+
+        # Edits wait here until Overleaf flushes them to Mongo, every few minutes; the volume
+        # carries them across a restart. A nightly copy would hold nothing Mongo does not.
+        volumes:
+          - claim: overleaf-redis-data
+            mountAt: /data
+            size: 5Gi
+            durability: reconstructible

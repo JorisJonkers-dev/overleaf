@@ -1,0 +1,123 @@
+# Tag-triggered publish: both images, then the Intent Fragment the estate composes.
+#
+# push of a v*.*.* tag (authored by release.yml via the App token) drives:
+#   publish-overleaf + publish-redis -> resolve-image-lock -> fragment
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish (vX.Y.Z)
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  publish-overleaf:
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@ce3b149334e147f65a5d6f6a8b674b8c90fb481f # v0.27.3
+    with:
+      image-name: overleaf
+      version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      platforms: linux/amd64 # sharelatex/sharelatex is published for amd64 only
+    permissions:
+      contents: read
+      packages: write
+
+  publish-redis:
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@ce3b149334e147f65a5d6f6a8b674b8c90fb481f # v0.27.3
+    with:
+      image-name: overleaf-redis
+      version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      context: redis
+      dockerfile: redis/Dockerfile
+      platforms: linux/amd64,linux/arm64
+    permissions:
+      contents: read
+      packages: write
+
+  # The images lock: each pushed digest, under the alias the project file names, with the
+  # user the image runs as, read from what was pushed.
+  resolve-image-lock:
+    needs: [publish-overleaf, publish-redis]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      images-lock-artifact: images-lock-${{ github.run_id }}
+      source-sha: ${{ steps.source.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
+
+      # The commit the release was cut from, so the fragment names it however publish was started.
+      - name: source-commit
+        id: source
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: lock-images
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          {
+            echo 'apiVersion: lock.jorisjonkers.dev/v1'
+            echo 'kind: ImagesLock'
+            echo 'schemaVersion: 1.0.0'
+            echo 'name: overleaf'
+            echo 'images:'
+          } > images.lock.yml
+          for alias in overleaf overleaf-redis; do
+            image="ghcr.io/jorisjonkers-dev/${alias}"
+            digest="$(docker buildx imagetools inspect "${image}:${TAG}" --format '{{json .Manifest}}' | jq -r '.digest')"
+            case "$digest" in
+              sha256:*) ;;
+              *) echo "::error::no digest for ${image}:${TAG}"; exit 1 ;;
+            esac
+            user="$(docker buildx imagetools inspect "${image}@${digest}" --format '{{ json .Image }}' \
+              | jq -r 'if has("linux/amd64") then .["linux/amd64"] else . end | .config.User')"
+            case "$user" in
+              *[!0-9:]*|"") echo "::error::${alias} runs as '${user}', not a numeric uid[:gid]"; exit 1 ;;
+            esac
+            {
+              echo "  ${alias}:"
+              echo "    repository: ${image}"
+              echo "    digest: \"${digest}\""
+              echo "    uid: ${user%%:*}"
+              echo "    gid: ${user##*:}"
+            } >> images.lock.yml
+          done
+          cat images.lock.yml >> "$GITHUB_STEP_SUMMARY"
+
+      - name: upload-image-lock
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: images-lock-${{ github.run_id }}
+          path: images.lock.yml
+          retention-days: 1
+
+  fragment:
+    needs: [resolve-image-lock]
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/publish-fragment.yml@ce3b149334e147f65a5d6f6a8b674b8c90fb481f # v0.27.3
+    with:
+      project-file: deploy/overleaf.project.yml
+      version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+      ref: ${{ needs.resolve-image-lock.outputs.source-sha }}
+      validate-with: deploy/env
+      validate-with-fragments: mail
+      images-lock-artifact: ${{ needs.resolve-image-lock.outputs.images-lock-artifact }}
+    secrets:
+      ESTATE_DISPATCH_APP_PRIVATE_KEY: ${{ secrets.ESTATE_DISPATCH_APP_PRIVATE_KEY }}

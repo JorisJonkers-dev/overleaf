@@ -1,0 +1,49 @@
+# One pipeline, ending in the required "Pipeline Complete" check.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  pipeline-complete:
+    name: Pipeline Complete
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Lint shell scripts
+        if: ${{ !cancelled() }}
+        run: shellcheck rootfs/usr/local/bin/overleaf-start rootfs/etc/runit/runsvdir/default/periodic/run scripts/*.sh
+
+      - name: Download actionlint
+        id: actionlint
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: bash <(curl --fail --silent --show-error --location https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+
+      - name: Lint GitHub Actions workflows
+        if: ${{ !cancelled() }}
+        run: '"${{ steps.actionlint.outputs.executable }}" -color .github/workflows/*.yml'
+
+      - name: Build the images
+        if: ${{ !cancelled() }}
+        run: |
+          docker build -t overleaf:ci .
+          docker build -t overleaf-redis:ci redis
+
+      # The image as the estate runs it: its own user, a read-only root, every capability
+      # dropped, and only /var/lib/overleaf, /run and /tmp writable.
+      - name: Start and compile under the restricted posture
+        if: ${{ !cancelled() }}
+        run: scripts/smoke-test.sh overleaf:ci overleaf-redis:ci

@@ -1,0 +1,22 @@
+#!/bin/bash
+# What the image's crontabs ran: flush and retry project history. The deletion jobs are left
+# out; they do nothing unless ENABLE_CRON_RESOURCE_DELETION is true.
+# shellcheck source=/dev/null
+source /etc/overleaf/env.sh
+history=http://127.0.0.1:3054
+minute=0
+while sleep 60; do
+  minute=$(( (minute + 1) % 1440 ))
+  if (( minute % 20 == 0 )); then
+    curl -sS -X POST "$history/flush/old?timeout=3600000&limit=5000&background=1" || true
+  fi
+  if (( minute % 60 == 30 )); then
+    curl -sS -X POST "$history/retry/failures?failureType=soft&timeout=3600000&limit=10000" || true
+  fi
+  if (( minute % 60 == 45 )); then
+    curl -sS -X POST "$history/retry/failures?failureType=hard&timeout=3600000&limit=10000" || true
+  fi
+  if (( minute == 180 )); then
+    (cd /overleaf/services/project-history && node scripts/flush_all.js) || true
+  fi
+done 2>&1

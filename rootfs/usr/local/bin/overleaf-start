@@ -1,0 +1,45 @@
+#!/bin/bash
+# What phusion's my_init did as root, done as www-data, then runit.
+set -euo pipefail
+
+if [ -z "${OVERLEAF_INVITE_TOKEN_SECRET:-}" ]; then
+  echo "OVERLEAF_INVITE_TOKEN_SECRET is not set" >&2
+  exit 101
+fi
+
+# The services authenticate to each other with these; my_init drew them fresh on every start too.
+secret() { head -c 32 /dev/urandom | base64 -w 0 | tr -d '+/='; }
+WEB_API_PASSWORD="$(secret)"; STAGING_PASSWORD="$(secret)"
+CRYPTO_RANDOM="$(secret)"; OT_JWT_AUTH_KEY="$(secret)"
+export WEB_API_PASSWORD STAGING_PASSWORD CRYPTO_RANDOM OT_JWT_AUTH_KEY
+export V1_HISTORY_PASSWORD="$STAGING_PASSWORD"
+export WEB_API_USER="${WEB_API_USER:-overleaf}"
+
+# A Garage access key id is GK and 24 hex digits; the secret store holds the hex, at least 24.
+if [ -n "${OVERLEAF_S3_KEY_HEX:-}" ]; then
+  export OVERLEAF_HISTORY_S3_ACCESS_KEY_ID="GK${OVERLEAF_S3_KEY_HEX:0:24}"
+  export OVERLEAF_FILESTORE_S3_ACCESS_KEY_ID="GK${OVERLEAF_S3_KEY_HEX:0:24}"
+fi
+
+mkdir -p /var/lib/overleaf/data/{compiles,output,cache,template_files,history} \
+  /var/lib/overleaf/tmp/{projectHistories,dumpFolder,uploads} \
+  /run/runit /run/nginx /tmp/nginx "$TEXMFVAR"
+
+# shellcheck source=/dev/null
+source /etc/overleaf/env.sh
+
+echo "Checking can connect to mongo and redis"
+(cd /overleaf/services/web && node modules/server-ce-scripts/scripts/check-mongodb.mjs \
+  && node modules/server-ce-scripts/scripts/check-redis.mjs)
+
+echo "Running migrations for server-ce"
+(cd /overleaf/tools/migrations && yarn run migrations migrate -t server-ce)
+
+(cd /overleaf/services/web && node modules/server-ce-scripts/scripts/check-texlive-images.mjs)
+
+echo "Checking for doc version recovery"
+(cd /overleaf/services/history-v1 && LOG_LEVEL=info \
+  DOC_VERSION_RECOVERY_RESYNCS_NEEDED_FILE=/var/lib/overleaf/data/history/doc-version-recovery-resyncs-5.0.3.log \
+  node storage/scripts/recover_doc_versions.js)
+
+exec runsvdir -P /etc/runit/runsvdir/default
