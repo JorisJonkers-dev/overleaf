@@ -19,7 +19,7 @@ permissions: {}
 
 jobs:
   publish-overleaf:
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@870429202376dac2e9434746941c54f9a2be605f # v0.33.0
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@583993e5865cd5b8761fe52db5843130fb107c51 # v0.34.2
     with:
       image-name: overleaf
       version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
@@ -29,7 +29,7 @@ jobs:
       packages: write
 
   publish-redis:
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@870429202376dac2e9434746941c54f9a2be605f # v0.33.0
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@583993e5865cd5b8761fe52db5843130fb107c51 # v0.34.2
     with:
       image-name: overleaf-redis
       version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
@@ -65,7 +65,7 @@ jobs:
       # The shared step also reads back the software version each image ships.
       - name: lock-images
         id: lock
-        uses: JorisJonkers-dev/github-workflows/actions/resolve-image-lock@870429202376dac2e9434746941c54f9a2be605f # v0.33.0
+        uses: JorisJonkers-dev/github-workflows/actions/resolve-image-lock@583993e5865cd5b8761fe52db5843130fb107c51 # v0.34.2
         with:
           name: overleaf
           images: |
@@ -79,7 +79,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/publish-fragment.yml@79e57122f7ed1fb442c90a7487f861c5d1465ec6 # v0.34.0
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/publish-fragment.yml@583993e5865cd5b8761fe52db5843130fb107c51 # v0.34.2
     with:
       project-file: deploy/overleaf.project.yml
       version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
