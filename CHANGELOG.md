@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/JorisJonkers-dev/overleaf/compare/v1.1.0...v1.1.1) (2026-10-21)
+
+
+### Miscellaneous Chores
+
+* Renovate alone updates dependencies, so Dependabot's fallback goes ([#14](https://github.com/JorisJonkers-dev/overleaf/issues/14)) ([64deec4](https://github.com/JorisJonkers-dev/overleaf/commit/64deec4f2d4f1c5d4ac33216066a06491d1b947e))
+
 ## [1.1.0](https://github.com/JorisJonkers-dev/overleaf/compare/v1.0.1...v1.1.0) (2026-10-21)
 
 
