@@ -17,7 +17,8 @@ permissions:
 jobs:
   pipeline-complete:
     name: Pipeline Complete
-    runs-on: ubuntu-latest
+    # mongo:8.0 refuses kernels 6.19 to 7.0.13 (SERVER-121912); 22.04 runs an older one.
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -46,4 +47,6 @@ jobs:
       # dropped, and only /var/lib/overleaf, /run and /tmp writable.
       - name: Start and compile under the restricted posture
         if: ${{ !cancelled() }}
-        run: scripts/smoke-test.sh overleaf:ci overleaf-redis:ci
+        run: |
+          echo "runner kernel: $(uname -r)"
+          scripts/smoke-test.sh overleaf:ci overleaf-redis:ci
