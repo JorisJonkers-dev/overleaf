@@ -79,7 +79,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/publish-fragment.yml@ce3b149334e147f65a5d6f6a8b674b8c90fb481f # v0.27.3
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/publish-fragment.yml@79e57122f7ed1fb442c90a7487f861c5d1465ec6 # v0.34.0
     with:
       project-file: deploy/overleaf.project.yml
       version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
