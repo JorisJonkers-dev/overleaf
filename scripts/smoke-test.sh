@@ -14,9 +14,19 @@ docker network create "$net" >/dev/null
 docker run -d --name smoke-mongo --network "$net" mongo:8.0 --replSet overleaf --bind_ip_all >/dev/null
 docker run -d --name smoke-redis --network "$net" --user 999:1000 --read-only --cap-drop ALL \
   --tmpfs /data:uid=999,gid=1000 "$redis_image" >/dev/null
-until docker exec smoke-mongo mongosh --quiet --eval \
-  'try { rs.status().ok } catch (e) { rs.initiate({_id: "overleaf", members: [{_id: 0, host: "smoke-mongo:27017"}]}).ok }' \
-  2>/dev/null | grep -q 1; do sleep 2; done
+# Mongo as a one-member replica set, which Overleaf needs for transactions. The wait is bounded
+# and names what went wrong, so a Mongo that never comes up fails the job instead of hanging it.
+replica_set_ok() {
+  docker exec smoke-mongo mongosh --quiet --eval \
+    'try { rs.status().ok } catch (e) { rs.initiate({_id: "overleaf", members: [{_id: 0, host: "smoke-mongo:27017"}]}).ok }' \
+    2>/dev/null | grep -qx 1
+}
+for _ in $(seq 1 60); do
+  replica_set_ok && break
+  [ "$(docker inspect -f '{{.State.Running}}' smoke-mongo)" = true ] || { docker logs smoke-mongo 2>&1 | tail -30; echo "smoke-mongo exited" >&2; exit 1; }
+  sleep 2
+done
+replica_set_ok || { docker logs smoke-mongo 2>&1 | tail -30; echo "smoke-mongo never became a replica set" >&2; exit 1; }
 
 docker run -d --name smoke-overleaf --network "$net" --user 33:33 --read-only --cap-drop ALL \
   --security-opt no-new-privileges \
