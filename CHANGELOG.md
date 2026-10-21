@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/JorisJonkers-dev/overleaf/compare/v1.0.1...v1.1.0) (2026-10-21)
+
+
+### Features
+
+* the images lock records each image's upstream version, and an upstream bump releases ([#9](https://github.com/JorisJonkers-dev/overleaf/issues/9)) ([10f5a13](https://github.com/JorisJonkers-dev/overleaf/commit/10f5a137d1148de8f4bdb70b0aae97d216cb19ac))
+
 ## [1.0.1](https://github.com/JorisJonkers-dev/overleaf/compare/v1.0.0...v1.0.1) (2026-10-16)
 
 
