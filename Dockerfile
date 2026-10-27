@@ -1,4 +1,4 @@
-FROM sharelatex/sharelatex:6.3.0@sha256:d2c20ae595d64f61dca224864b90a5594fb71df0c20c014c2dcaae595f2de7d8
+FROM sharelatex/sharelatex:6.3.1@sha256:0c659950e27f673ff4177181e1184382424f72c3cd45b372310082f06a844f1a
 
 # Run the Community Edition monolith as www-data, under a read-only root filesystem:
 # - every runit service runs as the user it is started as, and logs to stdout;
