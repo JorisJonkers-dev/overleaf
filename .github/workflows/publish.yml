@@ -19,7 +19,7 @@ permissions: {}
 
 jobs:
   publish-overleaf:
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@f2180a482b63756affde537233881fa12e65df70 # v0.35.0
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@16d241e44f03c5cc4696d2d0de615717a61ef3c0 # v0.36.0
     with:
       image-name: overleaf
       version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
@@ -29,7 +29,7 @@ jobs:
       packages: write
 
   publish-redis:
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@f2180a482b63756affde537233881fa12e65df70 # v0.35.0
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@16d241e44f03c5cc4696d2d0de615717a61ef3c0 # v0.36.0
     with:
       image-name: overleaf-redis
       version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
@@ -65,7 +65,7 @@ jobs:
       # The shared step also reads back the software version each image ships.
       - name: lock-images
         id: lock
-        uses: JorisJonkers-dev/github-workflows/actions/resolve-image-lock@f2180a482b63756affde537233881fa12e65df70 # v0.35.0
+        uses: JorisJonkers-dev/github-workflows/actions/resolve-image-lock@16d241e44f03c5cc4696d2d0de615717a61ef3c0 # v0.36.0
         with:
           name: overleaf
           images: |
