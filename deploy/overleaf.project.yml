@@ -44,6 +44,14 @@ applications:
             access: read
             delivery: env
             rotation: { tolerates: restart }
+          # Overleaf's own login to the platform's Mongo, and the URL it makes: readWrite and
+          # dbAdmin on `sharelatex`. The estate's bootstrap/secrets.sh --only mongo mints it and
+          # makes the user.
+          - path: secret/data/overleaf-system/mongo
+            keys: [url]
+            access: read
+            delivery: env
+            rotation: { tolerates: restart }
           # Overleaf's own Garage key, scoped to its buckets: a compile runs as the same user
           # and can read it. Garage's key id is GK and 24 hex digits, the first 24 of key_hex.
           - path: secret/data/overleaf-system/garage
