@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/JorisJonkers-dev/overleaf/compare/v1.2.0...v1.2.1) (2026-11-01)
+
+
+### Bug Fixes
+
+* keep biber's unpacked self and TeX's caches off /tmp, so a biblatex compile does not evict the pod ([#27](https://github.com/JorisJonkers-dev/overleaf/issues/27)) ([4b6370b](https://github.com/JorisJonkers-dev/overleaf/commit/4b6370b349dd3e27b764644af9f9ef35f5e57fec))
+
 ## [1.2.0](https://github.com/JorisJonkers-dev/overleaf/compare/v1.1.2...v1.2.0) (2026-11-01)
 
 
