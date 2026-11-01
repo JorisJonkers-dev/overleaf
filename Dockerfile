@@ -16,7 +16,7 @@ RUN set -eux; \
     fi; \
     tlmgr install scheme-full; \
     tlmgr path add; \
-    luaotfload-tool --update; \
+    TEXMFVAR="$(kpsewhich -var-value TEXMFSYSVAR)" luaotfload-tool --update; \
     rm -rf /tmp/* /root/.texlive*
 
 # Run the Community Edition monolith as www-data, under a read-only root filesystem:
@@ -47,5 +47,8 @@ RUN set -eux; \
 
 USER 33:33
 EXPOSE 8000
-ENV TEXMFVAR=/tmp/texmf-var HOME=/tmp
+# TeX's caches and biber's unpacked self go on the compile volume, not /tmp: biber is a PAR
+# executable that unpacks about 125MB into $PAR_GLOBAL_TMPDIR (else $TMPDIR) on its first run,
+# twice what the platform's 64Mi /tmp holds, and the pod is evicted for it.
+ENV TEXMFVAR=/var/lib/overleaf/texmf-var PAR_GLOBAL_TMPDIR=/var/lib/overleaf/tmp/par HOME=/tmp
 ENTRYPOINT ["/usr/local/bin/overleaf-start"]
