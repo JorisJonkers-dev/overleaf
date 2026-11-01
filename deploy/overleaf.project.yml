@@ -62,8 +62,17 @@ applications:
           cpu: 500m
           arch: [amd64] # sharelatex/sharelatex is published for amd64 only
 
-        # Compiles, their output and caches, runit's and nginx's runtime state, and TeX's.
-        writablePaths: [/var/lib/overleaf, /run, /tmp]
+        # runit's and nginx's runtime state, and TeX's.
+        writablePaths: [/run, /tmp]
+
+        # Compiles, their output and caches: more than a writable path's emptyDir holds, which
+        # evicted the pod. Every project file and history chunk is in Garage, so nothing here is
+        # more than a cache.
+        volumes:
+          - claim: overleaf-scratch
+            mountAt: /var/lib/overleaf
+            size: 10Gi
+            durability: reconstructible
 
         probes:
           readiness: { path: /status, port: 8000 }
