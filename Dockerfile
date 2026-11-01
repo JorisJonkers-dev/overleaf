@@ -3,14 +3,16 @@ FROM sharelatex/sharelatex:6.3.1@sha256:0c659950e27f673ff4177181e1184382424f72c3
 # The upstream image ships TeX Live's basic scheme, which lacks float, IEEEtran, biblatex and
 # most documents' packages. Install the full scheme from the image's own TeX Live year: tlnet
 # while that year is current, its frozen tlnet-final once a newer year has replaced it.
+# --all updates fmtutil with tlmgr; a new tlmgr calls the old fmtutil with arguments it refuses.
+# Every call uses the image's one fixed mirror: mirror.ctan.org picks a mirror per call, and a
+# mirror behind the last one is refused as older than the local installation.
 # The LuaTeX font database is built here, under TEXMFSYSVAR, so a compile under the read-only
 # root does not rebuild it into /tmp.
 RUN set -eux; \
     year=$(tlmgr --version | sed -n 's/^TeX Live .* version \([0-9]\{4\}\)$/\1/p'); \
-    tlmgr option repository https://mirror.ctan.org/systems/texlive/tlnet; \
-    if ! tlmgr update --self; then \
+    if ! tlmgr update --self --all; then \
       tlmgr option repository "https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/${year}/tlnet-final"; \
-      tlmgr update --self; \
+      tlmgr update --self --all; \
     fi; \
     tlmgr install scheme-full; \
     tlmgr path add; \
