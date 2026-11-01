@@ -24,6 +24,8 @@ filesystem and every capability dropped:
   `ENABLE_CRON_RESOURCE_DELETION` is true, which it is not here.
 - `OVERLEAF_S3_KEY_HEX` becomes the S3 access key id `GK` plus its first 24
   hex digits, the shape Garage requires.
+- TeX Live is the full scheme, not upstream's basic one, with the LuaTeX font
+  database built into the image.
 
 `/var/lib/overleaf`, `/run` and `/tmp` are the only writable paths. Every
 project file and history chunk is stored in Garage, so nothing there outlives
