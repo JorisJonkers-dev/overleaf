@@ -23,7 +23,7 @@ fi
 
 mkdir -p /var/lib/overleaf/data/{compiles,output,cache,template_files,history} \
   /var/lib/overleaf/tmp/{projectHistories,dumpFolder,uploads} \
-  /run/runit /run/nginx /tmp/nginx "$TEXMFVAR"
+  /run/runit /run/nginx /tmp/nginx "$TEXMFVAR" "$PAR_GLOBAL_TMPDIR"
 
 # shellcheck source=/dev/null
 source /etc/overleaf/env.sh

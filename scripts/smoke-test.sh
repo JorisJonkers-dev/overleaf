@@ -73,6 +73,16 @@ compile "a document on full-scheme packages" pdflatex cccccccccccccccccccccccc \
 # LuaTeX reads the font database built into the image, under a read-only root.
 compile "a fontspec document under lualatex" lualatex dddddddddddddddddddddddd \
   '\\documentclass{article}\\usepackage{fontspec}\\setmainfont{TeX Gyre Termes}\\begin{document}smoke\\end{document}'
+# biber unpacks about 125MB on its first run; the cluster's /tmp holds 64Mi, so none of it may land there.
+compile "a document cited through biber" pdflatex eeeeeeeeeeeeeeeeeeeeeeee \
+  '\\begin{filecontents}[overwrite]{refs.bib}\n@misc{k, author = {A}, title = {T}, year = {2020}}\n\\end{filecontents}\n\\documentclass{article}\\usepackage[backend=biber]{biblatex}\\addbibresource{refs.bib}\\begin{document}\\cite{k}\\printbibliography\\end{document}'
+tmp_kb=$(docker exec smoke-overleaf du -sk /tmp | cut -f1)
+echo "/tmp after the compiles: ${tmp_kb}K"
+if [ "$tmp_kb" -gt 32768 ]; then
+  docker exec smoke-overleaf du -sk /tmp/* /tmp/.[!.]* 2>/dev/null || true
+  echo "the compiles wrote more than 32M under /tmp, which the cluster caps at 64Mi" >&2
+  exit 1
+fi
 if docker exec smoke-overleaf ps -eo user= | grep -qvx www-data; then
   docker exec smoke-overleaf ps -eo user,args
   echo "a process runs as someone other than www-data" >&2
