@@ -51,15 +51,28 @@ for _ in $(seq 1 90); do
 done
 docker exec smoke-overleaf curl -fsS http://127.0.0.1:8000/status
 
-result=$(docker exec smoke-overleaf curl -fsS -X POST -H 'Content-Type: application/json' \
-  --data '{"compile":{"options":{"compiler":"pdflatex","timeout":60},"rootResourcePath":"main.tex","resources":[{"path":"main.tex","content":"\\documentclass{article}\\begin{document}smoke\\end{document}"}]}}' \
-  http://127.0.0.1:3013/project/aaaaaaaaaaaaaaaaaaaaaaaa/user/bbbbbbbbbbbbbbbbbbbbbbbb/compile)
-echo "$result" | head -c 300
-echo
-if ! echo "$result" | grep -q '"status":"success"'; then
-  docker logs smoke-overleaf | tail -50
-  exit 1
-fi
+# compile <name> <compiler> <project id> <main.tex content as a JSON string body>
+compile() {
+  local result
+  result=$(docker exec smoke-overleaf curl -fsS -X POST -H 'Content-Type: application/json' \
+    --data "{\"compile\":{\"options\":{\"compiler\":\"$2\",\"timeout\":120},\"rootResourcePath\":\"main.tex\",\"resources\":[{\"path\":\"main.tex\",\"content\":\"$4\"}]}}" \
+    "http://127.0.0.1:3013/project/$3/user/bbbbbbbbbbbbbbbbbbbbbbbb/compile")
+  echo "$1: $(echo "$result" | head -c 300)"
+  if ! echo "$result" | grep -q '"status":"success"'; then
+    docker logs smoke-overleaf | tail -50
+    echo "$1 did not compile" >&2
+    exit 1
+  fi
+}
+
+compile "a plain article" pdflatex aaaaaaaaaaaaaaaaaaaaaaaa \
+  '\\documentclass{article}\\begin{document}smoke\\end{document}'
+# Packages the basic scheme lacks, so this fails unless the full scheme is installed.
+compile "a document on full-scheme packages" pdflatex cccccccccccccccccccccccc \
+  '\\documentclass{IEEEtran}\\usepackage{float,listings,lipsum,microtype,seqsplit,xkeyval,parskip}\\usepackage[backend=biber]{biblatex}\\begin{document}\\lipsum[1]\\end{document}'
+# LuaTeX reads the font database built into the image, under a read-only root.
+compile "a fontspec document under lualatex" lualatex dddddddddddddddddddddddd \
+  '\\documentclass{article}\\usepackage{fontspec}\\setmainfont{TeX Gyre Termes}\\begin{document}smoke\\end{document}'
 if docker exec smoke-overleaf ps -eo user= | grep -qvx www-data; then
   docker exec smoke-overleaf ps -eo user,args
   echo "a process runs as someone other than www-data" >&2
