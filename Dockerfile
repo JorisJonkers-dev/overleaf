@@ -1,4 +1,4 @@
-FROM sharelatex/sharelatex:6.3.1@sha256:0c659950e27f673ff4177181e1184382424f72c3cd45b372310082f06a844f1a
+FROM sharelatex/sharelatex:6.3.2@sha256:ada39211c54a1e748065834ec44d3a49094cc475c28d8b803a251901592a94b2
 
 # The upstream image ships TeX Live's basic scheme, which lacks float, IEEEtran, biblatex and
 # most documents' packages. Install the full scheme from the image's own TeX Live year: tlnet
