@@ -94,7 +94,7 @@ applications:
           redis: 6379
 
         placement:
-          memory: 512Mi
+          memory: 128Mi # peaked at 11Mi over 14 days (2026-11-02)
           cpu: 100m
 
         probes:
