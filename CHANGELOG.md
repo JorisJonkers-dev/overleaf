@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/JorisJonkers-dev/overleaf/compare/v1.2.1...v1.2.2) (2026-11-02)
+
+
+### Bug Fixes
+
+* **deps:** update sharelatex/sharelatex docker tag to v6.3.2 ([#29](https://github.com/JorisJonkers-dev/overleaf/issues/29)) ([78fb395](https://github.com/JorisJonkers-dev/overleaf/commit/78fb395e70bd370f165560ed4b4544479115accb))
+
 ## [1.2.1](https://github.com/JorisJonkers-dev/overleaf/compare/v1.2.0...v1.2.1) (2026-11-01)
 
 
