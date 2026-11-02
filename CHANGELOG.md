@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/JorisJonkers-dev/overleaf/compare/v1.2.2...v1.2.3) (2026-11-02)
+
+
+### Bug Fixes
+
+* **deploy:** reserve what redis uses ([#32](https://github.com/JorisJonkers-dev/overleaf/issues/32)) ([6441be1](https://github.com/JorisJonkers-dev/overleaf/commit/6441be1d2b9f3b2fa375cc4ac0de79bcb2033a90))
+
 ## [1.2.2](https://github.com/JorisJonkers-dev/overleaf/compare/v1.2.1...v1.2.2) (2026-11-02)
 
 
