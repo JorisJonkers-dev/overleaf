@@ -19,7 +19,7 @@ permissions: {}
 
 jobs:
   publish-overleaf:
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@ab93bf1c435304c5933ab33f9febe087ff8be214 # v0.43.0
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@f8f0a5ae583913de18143bbbbe0db9ecab970435 # v0.45.0
     with:
       image-name: overleaf
       version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
@@ -27,9 +27,11 @@ jobs:
     permissions:
       contents: read
       packages: write
+    secrets:
+      PACKAGES_PROXY_TOKEN: ${{ secrets.PACKAGES_PROXY_TOKEN }}
 
   publish-redis:
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@ab93bf1c435304c5933ab33f9febe087ff8be214 # v0.43.0
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/container-publish.yml@f8f0a5ae583913de18143bbbbe0db9ecab970435 # v0.45.0
     with:
       image-name: overleaf-redis
       version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
@@ -39,6 +41,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    secrets:
+      PACKAGES_PROXY_TOKEN: ${{ secrets.PACKAGES_PROXY_TOKEN }}
 
   # The images lock: each pushed digest, under the alias the project file names, with the
   # user the image runs as, read from what was pushed.
@@ -65,7 +69,7 @@ jobs:
       # The shared step also reads back the software version each image ships.
       - name: lock-images
         id: lock
-        uses: JorisJonkers-dev/github-workflows/actions/resolve-image-lock@ab93bf1c435304c5933ab33f9febe087ff8be214 # v0.43.0
+        uses: JorisJonkers-dev/github-workflows/actions/resolve-image-lock@f8f0a5ae583913de18143bbbbe0db9ecab970435 # v0.45.0
         with:
           name: overleaf
           images: |
@@ -79,7 +83,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
-    uses: JorisJonkers-dev/github-workflows/.github/workflows/publish-fragment.yml@ab93bf1c435304c5933ab33f9febe087ff8be214 # v0.43.0
+    uses: JorisJonkers-dev/github-workflows/.github/workflows/publish-fragment.yml@f8f0a5ae583913de18143bbbbe0db9ecab970435 # v0.45.0
     with:
       project-file: deploy/overleaf.project.yml
       version: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
@@ -87,4 +91,5 @@ jobs:
       validate-with: deploy/env
       images-lock-artifact: ${{ needs.resolve-image-lock.outputs.images-lock-artifact }}
     secrets:
+      PACKAGES_PROXY_TOKEN: ${{ secrets.PACKAGES_PROXY_TOKEN }}
       ESTATE_DISPATCH_APP_PRIVATE_KEY: ${{ secrets.ESTATE_DISPATCH_APP_PRIVATE_KEY }}
