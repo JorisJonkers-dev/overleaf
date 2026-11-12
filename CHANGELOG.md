@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/JorisJonkers-dev/overleaf/compare/v1.2.3...v1.2.4) (2026-11-12)
+
+
+### Bug Fixes
+
+* **hygiene:** never cancel a run of the required hygiene checks ([#42](https://github.com/JorisJonkers-dev/overleaf/issues/42)) ([4b7f89d](https://github.com/JorisJonkers-dev/overleaf/commit/4b7f89de96eb05b9c2d6a438748215b2432f8f0b))
+
 ## [1.2.3](https://github.com/JorisJonkers-dev/overleaf/compare/v1.2.2...v1.2.3) (2026-11-02)
 
 
