@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.5](https://github.com/JorisJonkers-dev/overleaf/compare/v1.2.4...v1.2.5) (2026-11-20)
+
+
+### Bug Fixes
+
+* **deps:** update redis:7.4-alpine docker digest to 7f7d30b ([#47](https://github.com/JorisJonkers-dev/overleaf/issues/47)) ([54fd7a4](https://github.com/JorisJonkers-dev/overleaf/commit/54fd7a4bf975dfad38a5e24483f867d7507a3b29))
+
 ## [1.2.4](https://github.com/JorisJonkers-dev/overleaf/compare/v1.2.3...v1.2.4) (2026-11-12)
 
 
