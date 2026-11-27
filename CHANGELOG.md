@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.5](https://github.com/JorisJonkers-dev/overleaf/compare/v1.2.4...v1.2.5) (2026-11-27)
+
+
+### Bug Fixes
+
+* **deps:** update redis:7.4-alpine docker digest to 7f7d30b ([#47](https://github.com/JorisJonkers-dev/overleaf/issues/47)) ([54fd7a4](https://github.com/JorisJonkers-dev/overleaf/commit/54fd7a4bf975dfad38a5e24483f867d7507a3b29))
+* **deps:** update sharelatex/sharelatex docker tag to v6.3.3 ([#49](https://github.com/JorisJonkers-dev/overleaf/issues/49)) ([7b39838](https://github.com/JorisJonkers-dev/overleaf/commit/7b398382514168c8e81dc51d249eb7a7ed57977d))
+* **deps:** update sharelatex/sharelatex docker tag to v6.3.4 ([#50](https://github.com/JorisJonkers-dev/overleaf/issues/50)) ([8006a10](https://github.com/JorisJonkers-dev/overleaf/commit/8006a10df25d8b64f40576082e80e4717acd10d6))
+
 ## [1.2.4](https://github.com/JorisJonkers-dev/overleaf/compare/v1.2.3...v1.2.4) (2026-11-12)
 
 
